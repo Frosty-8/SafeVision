@@ -11,14 +11,7 @@ import json
 
 NUM_IMAGES = 1000
 
-TARGET_CLASSES = [
-    "person",
-    "bicycle",
-    "car",
-    "motorcycle",
-    "bus",
-    "truck"
-]
+TARGET_CLASSES = ["person", "bicycle", "car", "motorcycle", "bus", "truck"]
 
 ROOT = Path("data/coco")
 
@@ -54,7 +47,7 @@ print("Selected Categories:")
 for cat_id in category_ids:
     ids = coco.getImgIds(catIds=[cat_id])
     image_ids.update(ids)
-    
+
 # ----------------------------
 # Image IDs
 # ----------------------------
@@ -95,11 +88,7 @@ for image_id in selected_ids:
     new_images.append(image)
 
     anns = coco.loadAnns(
-        coco.getAnnIds(
-            imgIds=image_id,
-            catIds=category_ids,
-            iscrowd=None
-        )
+        coco.getAnnIds(imgIds=image_id, catIds=category_ids, iscrowd=None)
     )
 
     for ann in anns:
@@ -124,13 +113,9 @@ for image_id in selected_ids:
 categories = coco.loadCats(category_ids)
 
 subset = {
-
     "images": new_images,
-
     "annotations": new_annotations,
-
-    "categories": categories
-
+    "categories": categories,
 }
 
 output_json = OUTPUT_ANNOTATION_DIR / "instances_subset.json"

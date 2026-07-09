@@ -5,18 +5,12 @@ from pathlib import Path
 from typing import DefaultDict
 from collections.abc import Iterator
 from pycocotools.coco import COCO
+from app.datasets.loaders.base_loader import BaseDatasetLoader
 
-from app.schemas.coco import (
-    CocoAnnotation,
-    CocoImage,
-    CocoCategory
-)
+from app.schemas.coco import CocoAnnotation, CocoImage, CocoCategory
 
 from app.utils.logger import logger
-from app.utils.ui import (
-    success,
-    title
-)
+from app.utils.ui import success, title
 
 from rich.table import Table
 
@@ -25,7 +19,7 @@ from app.utils.console import console
 from app.core.exceptions import DatasetNotFoundError, DatasetNotLoadedError
 
 
-class CocoLoader:
+class CocoLoader(BaseDatasetLoader):
     """
     Production-ready COCO dataset loader.
 
@@ -45,11 +39,11 @@ class CocoLoader:
 
     Those responsibilities belong to other modules.
     """
+
     def __init__(
-        self, 
-        image_directory: str | Path,
-        annotation_file: str | Path
+        self, image_directory: str | Path, annotation_file: str | Path
     ) -> None:
+        super().__init__(image_directory, annotation_file)
         self.image_directory = Path(image_directory)
         self.annotation_file = Path(annotation_file)
 
@@ -59,10 +53,9 @@ class CocoLoader:
 
         self._categories: dict[int, CocoCategory] = {}
 
-        self._image_annotations: DefaultDict[
-            int, 
-            list[CocoAnnotation]
-        ] = defaultdict(list)
+        self._image_annotations: DefaultDict[int, list[CocoAnnotation]] = defaultdict(
+            list
+        )
 
         self._category_lookup: dict[int, str] = {}
 
@@ -70,16 +63,13 @@ class CocoLoader:
 
         self._coco: COCO | None = None
 
-        
     def _load_categories(self) -> None:
 
         logger.info("Loading categories...")
 
         assert self._coco is not None
 
-        for category in self._coco.loadCats(
-            self._coco.getCatIds()
-        ):
+        for category in self._coco.loadCats(self._coco.getCatIds()):
 
             obj = CocoCategory(
                 id=category["id"],
@@ -89,16 +79,13 @@ class CocoLoader:
 
             self._categories[obj.id] = obj
 
-
     def _load_images(self) -> None:
 
         logger.info("Loading images...")
 
         assert self._coco is not None
 
-        for image in self._coco.loadImgs(
-            self._coco.getImgIds()
-        ):
+        for image in self._coco.loadImgs(self._coco.getImgIds()):
 
             obj = CocoImage(
                 id=image["id"],
@@ -115,9 +102,7 @@ class CocoLoader:
 
         assert self._coco is not None
 
-        for annotation in self._coco.loadAnns(
-            self._coco.getAnnIds()
-        ):
+        for annotation in self._coco.loadAnns(self._coco.getAnnIds()):
 
             obj = CocoAnnotation(
                 id=annotation["id"],
@@ -136,20 +121,13 @@ class CocoLoader:
 
         for annotation in self._annotations.values():
 
-            self._image_annotations[
-                annotation.image_id
-            ].append(annotation)
+            self._image_annotations[annotation.image_id].append(annotation)
 
         self._category_lookup = {
-
-            category.id: category.name
-
-            for category in self._categories.values()
-
+            category.id: category.name for category in self._categories.values()
         }
 
         logger.info("Lookup tables created.")
-
 
     def _ensure_loaded(self) -> None:
         """
@@ -158,8 +136,7 @@ class CocoLoader:
 
         if not self._loaded:
             raise DatasetNotLoadedError(
-                "Dataset has not been loaded. "
-                "Call 'load()' before accessing data."
+                "Dataset has not been loaded. " "Call 'load()' before accessing data."
             )
 
     def get_image(
@@ -250,12 +227,10 @@ class CocoLoader:
 
         return len(self._images)
 
-
     @property
     def num_annotations(self) -> int:
 
         return len(self._annotations)
-
 
     @property
     def num_categories(self) -> int:
@@ -272,18 +247,14 @@ class CocoLoader:
         self,
     ) -> tuple[CocoAnnotation, ...]:
 
-        return tuple(
-            self._annotations.values()
-        )
+        return tuple(self._annotations.values())
 
     @property
     def categories(
         self,
     ) -> tuple[CocoCategory, ...]:
 
-        return tuple(
-            self._categories.values()
-        )
+        return tuple(self._categories.values())
 
     def get_image_path(
         self,
@@ -294,9 +265,7 @@ class CocoLoader:
 
         if image is None:
 
-            raise FileNotFoundError(
-                f"Image {image_id} not found."
-            )
+            raise FileNotFoundError(f"Image {image_id} not found.")
 
         return self.image_directory / image.file_name
 
@@ -308,62 +277,68 @@ class CocoLoader:
 
         for annotation in self._annotations.values():
 
-            name = self.get_category_name(
-                annotation.category_id
-            )
+            name = self.get_category_name(annotation.category_id)
 
             if name is None:
                 continue
 
-            distribution[name] = (
-                distribution.get(name, 0) + 1
-            )
+            distribution[name] = distribution.get(name, 0) + 1
 
         return distribution
-
 
     def summary(self) -> None:
         """
         Display a dataset summary.
         """
-    
+
         self._ensure_loaded()
-    
+
         table = Table(
             title="COCO Dataset Summary",
             show_header=True,
             header_style="bold cyan",
         )
-    
+
         table.add_column("Metric")
         table.add_column("Value", justify="right")
-    
+
         table.add_row("Images", str(self.num_images))
         table.add_row("Annotations", str(self.num_annotations))
         table.add_row("Categories", str(self.num_categories))
-    
+
         table.add_row(
             "Image Directory",
             str(self.image_directory),
         )
-    
+
         table.add_row(
             "Annotation File",
             str(self.annotation_file),
         )
-    
+
         console.print(table)
 
+    @property
+    def image_ids(self) -> tuple[int, ...]:
+        return tuple(self._images.keys())
+
+    @property
+    def annotation_ids(self) -> tuple[int, ...]:
+        return tuple(self._annotations.keys())
+
+    @property
+    def category_ids(self) -> tuple[int, ...]:
+        return tuple(self._categories.keys())
 
     def __len__(self) -> int:
         """
         Return total number of images.
         """
-    
+
         return self.num_images
 
     def __repr__(self) -> str:
-    
+
         return (
             f"CocoLoader("
             f"images={self.num_images}, "
@@ -372,7 +347,7 @@ class CocoLoader:
         )
 
     def __iter__(self) -> Iterator[CocoImage]:
-    
+
         yield from self._images.values()
 
     def get_images_by_category(
@@ -382,58 +357,50 @@ class CocoLoader:
         """
         Return all images containing a category.
         """
-    
+
         self._ensure_loaded()
-    
+
         category_ids = [
             category.id
             for category in self._categories.values()
             if category.name == category_name
         ]
-    
+
         if not category_ids:
             return []
-    
-        image_ids = set()
-    
-        for annotation in self._annotations.values():
-    
-            if annotation.category_id in category_ids:
-    
-                image_ids.add(annotation.image_id)
-    
-        return [
-            self._images[image_id]
-            for image_id in image_ids
-        ]
 
+        image_ids = set()
+
+        for annotation in self._annotations.values():
+
+            if annotation.category_id in category_ids:
+
+                image_ids.add(annotation.image_id)
+
+        return [self._images[image_id] for image_id in image_ids]
 
     def category_statistics(self) -> None:
-    
+
         table = Table(
             title="Category Distribution",
             header_style="bold magenta",
         )
-    
+
         table.add_column("Category")
-    
+
         table.add_column(
             "Annotations",
             justify="right",
         )
-    
-        distribution = (
-            self.get_category_distribution()
-        )
-    
-        for category, count in sorted(
-            distribution.items()
-        ):
+
+        distribution = self.get_category_distribution()
+
+        for category, count in sorted(distribution.items()):
             table.add_row(
                 category,
                 str(count),
             )
-    
+
         console.print(table)
 
     def image_has_category(
@@ -444,23 +411,15 @@ class CocoLoader:
         """
         Check if an image contains a category.
         """
-    
-        annotations = self.get_annotations(
-            image_id
-        )
-    
+
+        annotations = self.get_annotations(image_id)
+
         for annotation in annotations:
-    
-            if (
-                self.get_category_name(
-                    annotation.category_id
-                )
-                == category_name
-            ):
+
+            if self.get_category_name(annotation.category_id) == category_name:
                 return True
-    
+
         return False
-    
 
     """
     Load COCO dataset into memory

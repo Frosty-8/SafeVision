@@ -1,6 +1,3 @@
-def main():
-    print("Hello from safevision!")
+from app.schemas.validation import ValidationReport
 
-
-if __name__ == "__main__":
-    main()
+print(ValidationReport())

@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 
+
 @dataclass(slots=True, frozen=True)
 class CocoCategory:
     id: int
     name: str
     supercategory: str
+
 
 @dataclass(slots=True, frozen=True)
 class CocoImage:
@@ -12,6 +14,7 @@ class CocoImage:
     file_name: str
     width: int
     height: int
+
 
 @dataclass(slots=True, frozen=True)
 class CocoAnnotation:

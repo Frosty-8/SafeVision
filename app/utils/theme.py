@@ -10,6 +10,6 @@ SAFEVISION_THEME = Theme(
         "highlight": "bold cyan",
         "path": "green",
         "metric": "bold blue",
-        "panel": "white",        
+        "panel": "white",
     }
 )

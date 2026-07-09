@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 
+
 @dataclass(slots=True)
 class ValidationReport:
 
@@ -17,8 +18,14 @@ class ValidationReport:
 
     invalid_bounding_boxes: int = 0
 
-    duplicate_annotaions: int = 0
+    duplicate_annotations: int = 0
+
+    passed_checks: int = 0
+
+    failed_checks: int = 0
+
+    execution_time: float = 0.0
 
     warnings: list[str] = field(default_factory=list)
-    
+
     errors: list[str] = field(default_factory=list)

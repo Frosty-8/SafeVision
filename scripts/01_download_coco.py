@@ -14,11 +14,8 @@ IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 ANNOTATION_DIR.mkdir(parents=True, exist_ok=True)
 
 FILES = {
-    "val2017.zip":
-        "http://images.cocodataset.org/zips/val2017.zip",
-
-    "annotations_trainval2017.zip":
-        "http://images.cocodataset.org/annotations/annotations_trainval2017.zip",
+    "val2017.zip": "http://images.cocodataset.org/zips/val2017.zip",
+    "annotations_trainval2017.zip": "http://images.cocodataset.org/annotations/annotations_trainval2017.zip",
 }
 
 
@@ -32,13 +29,16 @@ def download(url: str, destination: Path):
 
     total = int(response.headers.get("content-length", 0))
 
-    with open(destination, "wb") as file, tqdm(
-        desc=destination.name,
-        total=total,
-        unit="B",
-        unit_scale=True,
-        unit_divisor=1024,
-    ) as progress:
+    with (
+        open(destination, "wb") as file,
+        tqdm(
+            desc=destination.name,
+            total=total,
+            unit="B",
+            unit_scale=True,
+            unit_divisor=1024,
+        ) as progress,
+    ):
 
         for chunk in response.iter_content(chunk_size=1024 * 1024):
             if chunk:
