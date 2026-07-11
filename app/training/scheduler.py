@@ -11,6 +11,7 @@ from torch.optim.lr_scheduler import (
 
 from app.utils.logger import logger
 
+
 class SchedulerFactory:
     """
     Factory for creating learning-rate schedulers.
@@ -40,7 +41,6 @@ class SchedulerFactory:
 
         self.max_learning_rate = max_learning_rate
 
-
     def create(
         self,
         optimizer: Optimizer,
@@ -48,39 +48,37 @@ class SchedulerFactory:
         """
         Create scheduler.
         """
-    
+
         logger.info(
             "Creating {} scheduler.",
             self.scheduler,
         )
-    
+
         if self.scheduler == "cosine":
-    
+
             return self._create_cosine_scheduler(
                 optimizer,
             )
-    
+
         if self.scheduler == "step":
-    
+
             return self._create_step_scheduler(
                 optimizer,
             )
-    
+
         if self.scheduler == "plateau":
-    
+
             return self._create_plateau_scheduler(
                 optimizer,
             )
-    
+
         if self.scheduler == "onecycle":
-    
+
             return self._create_onecycle_scheduler(
                 optimizer,
             )
-    
-        raise ValueError(
-            f"Unsupported scheduler: {self.scheduler}"
-        )
+
+        raise ValueError(f"Unsupported scheduler: {self.scheduler}")
 
     def _create_cosine_scheduler(
         self,
@@ -89,13 +87,10 @@ class SchedulerFactory:
         """
         Create cosine annealing scheduler.
         """
-    
+
         return CosineAnnealingLR(
-    
             optimizer,
-    
             T_max=self.epochs,
-    
             eta_min=self.min_learning_rate,
         )
 
@@ -106,17 +101,13 @@ class SchedulerFactory:
         """
         Create step scheduler.
         """
-    
+
         return StepLR(
-    
             optimizer,
-    
             step_size=self.step_size,
-    
             gamma=self.gamma,
         )
 
-    
     def _create_plateau_scheduler(
         self,
         optimizer: Optimizer,
@@ -124,17 +115,12 @@ class SchedulerFactory:
         """
         Create ReduceLROnPlateau scheduler.
         """
-    
+
         return ReduceLROnPlateau(
-    
             optimizer,
-    
             mode="min",
-    
             factor=self.gamma,
-    
             patience=5,
-    
             min_lr=self.min_learning_rate,
         )
 
@@ -145,15 +131,11 @@ class SchedulerFactory:
         """
         Create OneCycle scheduler.
         """
-    
+
         return OneCycleLR(
-    
             optimizer,
-    
             max_lr=self.max_learning_rate,
-    
             epochs=self.epochs,
-    
             steps_per_epoch=self.steps_per_epoch,
         )
 
@@ -164,14 +146,10 @@ class SchedulerFactory:
         """
         Supported schedulers.
         """
-    
+
         return (
-    
             "cosine",
-    
             "step",
-    
             "plateau",
-    
             "onecycle",
         )

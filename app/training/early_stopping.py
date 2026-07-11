@@ -21,6 +21,7 @@ class EarlyStopping:
     Monitors a validation metric and stops
     training when no improvement is observed.
     """
+
     def __init__(
         self,
         patience: int = 10,
@@ -28,29 +29,22 @@ class EarlyStopping:
         monitor: str = "loss",
         mode: str = "min",
     ) -> None:
-    
-        self.patience = patience
-    
-        self.min_delta = min_delta
-    
-        self.monitor = monitor
-    
-        self.mode = mode.lower()
-    
-        self.counter = 0
-    
-        self.should_stop = False
-    
-        self.best_score = (
-            float("inf")
-            if self.mode == "min"
-            else float("-inf")
-        )
-    
-        logger.info(
-            "EarlyStopping initialized."
-        )
 
+        self.patience = patience
+
+        self.min_delta = min_delta
+
+        self.monitor = monitor
+
+        self.mode = mode.lower()
+
+        self.counter = 0
+
+        self.should_stop = False
+
+        self.best_score = float("inf") if self.mode == "min" else float("-inf")
+
+        logger.info("EarlyStopping initialized.")
 
     def step(
         self,
@@ -58,48 +52,44 @@ class EarlyStopping:
     ) -> bool:
         """
         Update early stopping state.
-    
+
         Returns
         -------
         bool
             True if training should stop.
         """
-    
+
         score = metrics[self.monitor]
-    
+
         if self._is_improvement(score):
-    
+
             self.best_score = score
-    
+
             self.counter = 0
-    
+
             logger.info(
                 "Validation {} improved to {:.6f}.",
                 self.monitor,
                 score,
             )
-    
+
         else:
-    
+
             self.counter += 1
-    
+
             logger.info(
                 "No improvement ({}/{})",
                 self.counter,
                 self.patience,
             )
-    
+
             if self.counter >= self.patience:
-    
+
                 self.should_stop = True
-    
-                logger.warning(
-                    "Early stopping triggered."
-                )
-    
+
+                logger.warning("Early stopping triggered.")
+
         return self.should_stop
-
-
 
     def _is_improvement(
         self,
@@ -108,19 +98,12 @@ class EarlyStopping:
         """
         Determine whether the metric improved.
         """
-    
-        if self.mode == "min":
-    
-            return (
-                score
-                < self.best_score - self.min_delta
-            )
-    
-        return (
-            score
-            > self.best_score + self.min_delta
-        )
 
+        if self.mode == "min":
+
+            return score < self.best_score - self.min_delta
+
+        return score > self.best_score + self.min_delta
 
     def reset(
         self,
@@ -128,18 +111,12 @@ class EarlyStopping:
         """
         Reset internal state.
         """
-    
+
         self.counter = 0
-    
+
         self.should_stop = False
-    
-        self.best_score = (
-            float("inf")
-            if self.mode == "min"
-            else float("-inf")
-        )
 
-
+        self.best_score = float("inf") if self.mode == "min" else float("-inf")
 
     def state_dict(
         self,
@@ -147,18 +124,12 @@ class EarlyStopping:
         """
         Serialize state.
         """
-    
+
         return {
-    
             "counter": self.counter,
-    
             "best_score": self.best_score,
-    
             "should_stop": self.should_stop,
-    
         }
-
-
 
     def load_state_dict(
         self,
@@ -167,9 +138,9 @@ class EarlyStopping:
         """
         Restore state.
         """
-    
+
         self.counter = state["counter"]
-    
+
         self.best_score = state["best_score"]
-    
+
         self.should_stop = state["should_stop"]

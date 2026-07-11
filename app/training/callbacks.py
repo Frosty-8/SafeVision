@@ -17,8 +17,9 @@ from typing import Any
 from app.utils.logger import logger
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING: 
+if TYPE_CHECKING:
     from app.training.trainer import Trainer
+
 
 class Callback(ABC):
     """
@@ -34,9 +35,8 @@ class Callback(ABC):
         """
         Called before training starts.
         """
-    
-        pass
 
+        pass
 
     def on_train_end(
         self,
@@ -45,9 +45,8 @@ class Callback(ABC):
         """
         Called after training finishes.
         """
-    
-        pass
 
+        pass
 
     def on_epoch_start(
         self,
@@ -57,9 +56,8 @@ class Callback(ABC):
         """
         Called before each epoch.
         """
-    
-        pass
 
+        pass
 
     def on_epoch_end(
         self,
@@ -70,7 +68,7 @@ class Callback(ABC):
         """
         Called after every epoch.
         """
-    
+
         pass
 
     def on_batch_start(
@@ -81,7 +79,7 @@ class Callback(ABC):
         """
         Called before every batch.
         """
-    
+
         pass
 
     def on_batch_end(
@@ -93,7 +91,7 @@ class Callback(ABC):
         """
         Called after every batch.
         """
-    
+
         pass
 
     def on_before_backward(
@@ -103,10 +101,9 @@ class Callback(ABC):
         """
         Called before loss.backward().
         """
-    
+
         pass
-    
-    
+
     def on_after_backward(
         self,
         trainer: Trainer,
@@ -114,10 +111,9 @@ class Callback(ABC):
         """
         Called after loss.backward().
         """
-    
+
         pass
-    
-    
+
     def on_optimizer_step(
         self,
         trainer: Trainer,
@@ -125,10 +121,9 @@ class Callback(ABC):
         """
         Called before optimizer.step().
         """
-    
+
         pass
-    
-    
+
     def on_scheduler_step(
         self,
         trainer: Trainer,
@@ -136,7 +131,7 @@ class Callback(ABC):
         """
         Called before scheduler.step().
         """
-    
+
         pass
 
     def on_validation_start(
@@ -146,7 +141,7 @@ class Callback(ABC):
         """
         Called before validation.
         """
-    
+
         pass
 
     def on_validation_end(
@@ -157,7 +152,7 @@ class Callback(ABC):
         """
         Called after validation.
         """
-    
+
         pass
 
     def on_checkpoint_save(
@@ -168,7 +163,7 @@ class Callback(ABC):
         """
         Called after checkpoint saving.
         """
-    
+
         pass
 
     def on_exception(
@@ -179,22 +174,23 @@ class Callback(ABC):
         """
         Called if training crashes.
         """
-    
+
         logger.exception(
             "Training crashed.",
         )
+
 
 class CallbackManager:
     """
     Executes callbacks during training.
     """
+
     def __init__(
         self,
         callbacks: list[Callback] | None = None,
     ) -> None:
-    
-        self.callbacks = callbacks or []
 
+        self.callbacks = callbacks or []
 
     def register(
         self,
@@ -203,7 +199,7 @@ class CallbackManager:
         """
         Register callback.
         """
-    
+
         self.callbacks.append(
             callback,
         )
@@ -215,7 +211,7 @@ class CallbackManager:
         """
         Remove callback.
         """
-    
+
         self.callbacks.remove(
             callback,
         )
@@ -226,7 +222,7 @@ class CallbackManager:
         """
         Remove every callback.
         """
-    
+
         self.callbacks.clear()
 
     def notify(
@@ -238,32 +234,32 @@ class CallbackManager:
         """
         Notify every callback of an event.
         """
-    
+
         for callback in self.callbacks:
-    
+
             handler = getattr(
                 callback,
                 event,
                 None,
             )
-    
+
             if not callable(handler):
                 continue
-            
+
             try:
-            
+
                 handler(
                     *args,
                     **kwargs,
                 )
-            
+
             except Exception:
-            
+
                 logger.exception(
                     "Callback '{}' failed.",
                     callback.__class__.__name__,
                 )
-            
+
                 raise
 
     def __len__(
@@ -272,7 +268,7 @@ class CallbackManager:
         """
         Number of callbacks.
         """
-    
+
         return len(
             self.callbacks,
         )
@@ -283,7 +279,7 @@ class CallbackManager:
         """
         Iterate over callbacks.
         """
-    
+
         return iter(
             self.callbacks,
         )
@@ -295,10 +291,13 @@ class CallbackManager:
         """
         Whether callbacks are registered.
         """
-    
-        return len(
-            self.callbacks,
-        ) > 0
+
+        return (
+            len(
+                self.callbacks,
+            )
+            > 0
+        )
 
     @property
     def count(
@@ -307,7 +306,7 @@ class CallbackManager:
         """
         Number of registered callbacks.
         """
-    
+
         return len(
             self.callbacks,
         )

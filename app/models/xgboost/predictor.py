@@ -23,9 +23,7 @@ class XGBoostPredictor:
 
         self.model = None
 
-        logger.info(
-            "XGBoostPredictor initialized."
-        )
+        logger.info("XGBoostPredictor initialized.")
 
     def load(
         self,
@@ -34,11 +32,11 @@ class XGBoostPredictor:
         """
         Load trained model.
         """
-    
+
         self.model = joblib.load(
             path,
         )
-    
+
         logger.info(
             "Loaded XGBoost model from '{}'.",
             path,
@@ -51,38 +49,28 @@ class XGBoostPredictor:
         """
         Predict risk for one sample.
         """
-    
+
         self._check_loaded()
-    
+
         probability = float(
-    
             self.model.predict_proba(
                 dataframe,
-            )[0][1]
-    
+            )[
+                0
+            ][1]
         )
-    
+
         prediction = int(
-    
             self.model.predict(
                 dataframe,
             )[0]
-    
-        )
-    
-        return RiskPrediction(
-    
-            probability=probability,
-    
-            risk_score=probability,
-    
-            decision=(
-                "unsafe"
-                if prediction
-                else "safe"
-            ),
         )
 
+        return RiskPrediction(
+            probability=probability,
+            risk_score=probability,
+            decision=("unsafe" if prediction else "safe"),
+        )
 
     def predict_batch(
         self,
@@ -91,27 +79,22 @@ class XGBoostPredictor:
         """
         Predict multiple samples.
         """
-    
+
         self._check_loaded()
-    
+
         probabilities = self.model.predict_proba(
             dataframe,
         )[:, 1]
-    
+
         predictions = self.model.predict(
             dataframe,
         )
-    
+
         return pd.DataFrame(
-    
             {
-    
                 "prediction": predictions,
-    
                 "probability": probabilities,
-    
             }
-    
         )
 
     def predict_probability(
@@ -121,15 +104,15 @@ class XGBoostPredictor:
         """
         Return prediction probability.
         """
-    
+
         self._check_loaded()
-    
+
         return float(
-    
             self.model.predict_proba(
                 dataframe,
-            )[0][1]
-    
+            )[
+                0
+            ][1]
         )
 
     def _check_loaded(
@@ -138,12 +121,10 @@ class XGBoostPredictor:
         """
         Ensure model is loaded.
         """
-    
+
         if self.model is None:
-    
-            raise RuntimeError(
-                "Model has not been loaded."
-            )
+
+            raise RuntimeError("Model has not been loaded.")
 
     @property
     def is_loaded(
@@ -152,5 +133,5 @@ class XGBoostPredictor:
         """
         Whether the model has been loaded.
         """
-    
+
         return self.model is not None

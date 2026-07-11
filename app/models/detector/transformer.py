@@ -4,12 +4,8 @@ import torch
 import torch.nn as nn
 
 from app.models.detector.backbone import Backbone
-from app.models.detector.encoder import (
-    TransformerEncoder
-)
-from app.models.detector.decoder import (
-    TransformerDecoder
-)
+from app.models.detector.encoder import TransformerEncoder
+from app.models.detector.decoder import TransformerDecoder
 from app.utils.logger import logger
 
 
@@ -17,6 +13,7 @@ class DeformableTransformer(nn.Module):
     """
     Complete transformer used by SafeVision DETR.
     """
+
     def __init__(
         self,
         input_channels: int = 256,
@@ -27,7 +24,7 @@ class DeformableTransformer(nn.Module):
         num_points: int = 4,
         num_queries: int = 300,
     ) -> None:
-    
+
         super().__init__()
 
         self.backbone = Backbone(
@@ -50,9 +47,7 @@ class DeformableTransformer(nn.Module):
             num_points=num_points,
         )
 
-        logger.info(
-            "DeformableTransformer initialized."
-        )
+        logger.info("DeformableTransformer initialized.")
 
     def forward(
         self,
@@ -60,20 +55,20 @@ class DeformableTransformer(nn.Module):
     ) -> torch.Tensor:
         """
         Run the complete transformer.
-    
+
         Parameters
         ----------
         features
             Fused feature map
-    
+
             (B,C,H,W)
-    
+
         Returns
         -------
         torch.Tensor
-    
+
             Detection queries
-    
+
             (B,Q,C)
         """
         features = self.backbone(
@@ -97,9 +92,8 @@ class DeformableTransformer(nn.Module):
         """
         Output embedding dimension.
         """
-    
-        return self.decoder.embedding_dim
 
+        return self.decoder.embedding_dim
 
     @property
     def num_queries(
@@ -108,5 +102,5 @@ class DeformableTransformer(nn.Module):
         """
         Number of object queries.
         """
-    
+
         return self.decoder.num_queries

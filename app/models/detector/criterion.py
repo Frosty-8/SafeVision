@@ -56,12 +56,7 @@ class SetCriterion(nn.Module):
 
         self.confidence_weight = confidence_weight
 
-        logger.info(
-            "SetCriterion initialized."
-        )
-
-
-
+        logger.info("SetCriterion initialized.")
 
     def forward(
         self,
@@ -79,13 +74,11 @@ class SetCriterion(nn.Module):
             matches,
         )
 
-
         bbox = self.bbox_loss(
             predictions,
             targets,
             matches,
         )
-
 
         giou = self.giou_loss(
             predictions,
@@ -93,36 +86,18 @@ class SetCriterion(nn.Module):
             matches,
         )
 
-
         confidence = self.confidence_loss(
             predictions,
             targets,
             matches,
         )
 
-
         total = (
-        
-            self.class_weight
-            * classification
-        
-            +
-        
-            self.bbox_weight
-            * bbox
-        
-            +
-        
-            self.giou_weight
-            * giou
-        
-            +
-        
-            self.confidence_weight
-            * confidence
-        
+            self.class_weight * classification
+            + self.bbox_weight * bbox
+            + self.giou_weight * giou
+            + self.confidence_weight * confidence
         )
-
 
         return LossOutput(
             total=total,
@@ -139,15 +114,10 @@ class SetCriterion(nn.Module):
         """
         Return configured loss weights.
         """
-    
+
         return {
-    
             "classification": self.class_weight,
-    
             "bbox": self.bbox_weight,
-    
             "giou": self.giou_weight,
-    
             "confidence": self.confidence_weight,
-    
         }

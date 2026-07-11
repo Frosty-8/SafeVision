@@ -7,6 +7,7 @@ import torch
 Target = dict[str, Any]
 Batch = list[tuple[torch.Tensor, Target]]
 
+
 def detection_collate_fn(
     batch: Batch,
 ) -> tuple[

@@ -4,6 +4,7 @@ from app.schemas.dataset import CocoAnnotation
 from app.schemas.dataset import CocoCategory
 from app.schemas.dataset import CocoImage
 
+
 @dataclass(slots=True)
 class DatasetSplit:
 
@@ -12,6 +13,7 @@ class DatasetSplit:
     annotations: list[CocoAnnotation] = []
 
     categories: list[CocoCategory] = []
+
 
 @dataclass(slots=True)
 class SplitReport:

@@ -5,6 +5,7 @@ import torch.nn as nn
 
 from app.utils.logger import logger
 
+
 class ResidualBlock(nn.Module):
     """
     Lightweight residual refinement block.
@@ -18,7 +19,6 @@ class ResidualBlock(nn.Module):
         super().__init__()
 
         self.block = nn.Sequential(
-
             nn.Conv2d(
                 channels,
                 channels,
@@ -26,15 +26,12 @@ class ResidualBlock(nn.Module):
                 padding=1,
                 bias=False,
             ),
-
             nn.BatchNorm2d(
                 channels,
             ),
-
             nn.ReLU(
                 inplace=True,
             ),
-
             nn.Conv2d(
                 channels,
                 channels,
@@ -42,7 +39,6 @@ class ResidualBlock(nn.Module):
                 padding=1,
                 bias=False,
             ),
-
             nn.BatchNorm2d(
                 channels,
             ),
@@ -69,68 +65,60 @@ class ResidualBlock(nn.Module):
             out,
         )
 
+
 class Backbone(nn.Module):
     """
     Feature adapter for fused sensor
     representations.
     """
+
     def __init__(
         self,
         input_channels: int = 256,
         hidden_channels: int = 256,
     ) -> None:
-    
+
         super().__init__()
-    
+
         self.input_projection = nn.Sequential(
-    
             nn.Conv2d(
                 input_channels,
                 hidden_channels,
                 kernel_size=1,
                 bias=False,
             ),
-    
             nn.BatchNorm2d(
                 hidden_channels,
             ),
-    
             nn.ReLU(
                 inplace=True,
             ),
         )
-    
+
         self.refinement = nn.Sequential(
-    
             ResidualBlock(
                 hidden_channels,
             ),
-    
             ResidualBlock(
                 hidden_channels,
             ),
-    
         )
-    
+
         self.output_projection = nn.Sequential(
-    
             nn.Conv2d(
                 hidden_channels,
                 hidden_channels,
                 kernel_size=1,
                 bias=False,
             ),
-    
             nn.BatchNorm2d(
                 hidden_channels,
             ),
         )
 
         self._output_channels = hidden_channels
-        
-        logger.info(
-            "Detector backbone initialized."
-        )
+
+        logger.info("Detector backbone initialized.")
 
     @property
     def output_channels(
@@ -149,19 +137,17 @@ class Backbone(nn.Module):
         Refine fused features before the
         transformer encoder.
         """
-    
+
         features = self.input_projection(
             features,
         )
-    
+
         features = self.refinement(
             features,
         )
-    
+
         features = self.output_projection(
             features,
         )
-    
+
         return features
-
-

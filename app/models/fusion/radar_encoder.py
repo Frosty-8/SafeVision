@@ -17,6 +17,7 @@ import torch.nn as nn
 
 from app.utils.logger import logger
 
+
 class ResidualBlock(nn.Module):
     """
     Lightweight residual block.
@@ -30,7 +31,6 @@ class ResidualBlock(nn.Module):
         super().__init__()
 
         self.layers = nn.Sequential(
-
             nn.Conv2d(
                 channels,
                 channels,
@@ -38,15 +38,12 @@ class ResidualBlock(nn.Module):
                 padding=1,
                 bias=False,
             ),
-
             nn.BatchNorm2d(
                 channels,
             ),
-
             nn.ReLU(
                 inplace=True,
             ),
-
             nn.Conv2d(
                 channels,
                 channels,
@@ -54,7 +51,6 @@ class ResidualBlock(nn.Module):
                 padding=1,
                 bias=False,
             ),
-
             nn.BatchNorm2d(
                 channels,
             ),
@@ -85,25 +81,24 @@ class RadarEncoder(nn.Module):
     Converts radar tensors into the
     common embedding space.
     """
+
     def __init__(
         self,
         input_channels: int = 5,
         embedding_dim: int = 256,
     ) -> None:
-    
+
         super().__init__()
-    
+
         self.input_channels = input_channels
-    
+
         self.embedding_dim = embedding_dim
-    
+
         self.encoder = self._build_encoder()
-    
+
         self.projection = self._build_projection()
-    
-        logger.info(
-            "RadarEncoder initialized."
-        )
+
+        logger.info("RadarEncoder initialized.")
 
     def _build_encoder(
         self,
@@ -111,9 +106,8 @@ class RadarEncoder(nn.Module):
         """
         Build radar encoder.
         """
-    
+
         return nn.Sequential(
-    
             nn.Conv2d(
                 self.input_channels,
                 64,
@@ -121,11 +115,8 @@ class RadarEncoder(nn.Module):
                 padding=1,
                 bias=False,
             ),
-    
             nn.BatchNorm2d(64),
-    
             nn.ReLU(inplace=True),
-    
             nn.Conv2d(
                 64,
                 128,
@@ -134,15 +125,11 @@ class RadarEncoder(nn.Module):
                 padding=1,
                 bias=False,
             ),
-    
             nn.BatchNorm2d(128),
-    
             nn.ReLU(inplace=True),
-    
             ResidualBlock(
                 128,
             ),
-    
             nn.Conv2d(
                 128,
                 256,
@@ -151,9 +138,7 @@ class RadarEncoder(nn.Module):
                 padding=1,
                 bias=False,
             ),
-    
             nn.BatchNorm2d(256),
-    
             nn.ReLU(inplace=True),
         )
 
@@ -164,25 +149,21 @@ class RadarEncoder(nn.Module):
         Project radar features into the
         common embedding space.
         """
-    
+
         return nn.Sequential(
-    
             nn.Conv2d(
                 256,
                 self.embedding_dim,
                 kernel_size=1,
                 bias=False,
             ),
-    
             nn.BatchNorm2d(
                 self.embedding_dim,
             ),
-    
             nn.ReLU(
                 inplace=True,
             ),
         )
-
 
     def forward(
         self,
@@ -190,27 +171,27 @@ class RadarEncoder(nn.Module):
     ) -> torch.Tensor:
         """
         Encode radar features.
-    
+
         Parameters
         ----------
         radar:
             Tensor of shape
             (B,C,H,W)
-    
+
         Returns
         -------
         Tensor
             (B,256,H,W)
         """
-    
+
         features = self.encoder(
             radar,
         )
-    
+
         embeddings = self.projection(
             features,
         )
-    
+
         return embeddings
 
     @property
@@ -220,5 +201,5 @@ class RadarEncoder(nn.Module):
         """
         Output embedding dimension.
         """
-    
+
         return self.embedding_dim

@@ -32,38 +32,34 @@ class SensorFusion(nn.Module):
     downstream object detection.
     """
 
-
     def __init__(
         self,
         embedding_dim: int = 256,
     ) -> None:
-    
+
         super().__init__()
-    
+
         self.camera_encoder = CameraEncoder(
             embedding_dim=embedding_dim,
         )
-    
+
         self.lidar_encoder = LiDAREncoder(
             embedding_dim=embedding_dim,
         )
-    
+
         self.radar_encoder = RadarEncoder(
             embedding_dim=embedding_dim,
         )
-    
+
         self.fusion_head = FusionHead(
             embedding_dim=embedding_dim,
         )
-    
+
         self.transformer = FusionTransformer(
             embedding_dim=embedding_dim,
         )
-    
-        logger.info(
-            "SensorFusion initialized."
-        )
 
+        logger.info("SensorFusion initialized.")
 
     def forward(
         self,
@@ -73,36 +69,36 @@ class SensorFusion(nn.Module):
     ) -> torch.Tensor:
         """
         Fuse all available sensor inputs.
-    
+
         Parameters
         ----------
         camera
             RGB images.
-    
+
         lidar
             LiDAR feature tensor.
-    
+
         radar
             Radar feature tensor.
-    
+
         Returns
         -------
         torch.Tensor
             Unified feature map.
         """
-    
+
         camera_features = self.camera_encoder(
             camera,
         )
-    
+
         lidar_features = self.lidar_encoder(
             lidar,
         )
-    
+
         radar_features = self.radar_encoder(
             radar,
         )
-    
+
         (
             camera_features,
             lidar_features,
@@ -112,15 +108,14 @@ class SensorFusion(nn.Module):
             lidar_features,
             radar_features,
         )
-    
+
         fused = self.transformer(
             camera_features,
             lidar_features,
             radar_features,
         )
-    
-        return fused
 
+        return fused
 
     @property
     def output_channels(
@@ -129,7 +124,5 @@ class SensorFusion(nn.Module):
         """
         Output embedding dimension.
         """
-    
-        return (
-            self.camera_encoder.output_channels
-        )
+
+        return self.camera_encoder.output_channels

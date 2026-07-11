@@ -34,29 +34,24 @@ class CheckpointManager:
         metric_name: str = "loss",
         mode: str = "min",
     ) -> None:
-    
+
         self.directory = Path(directory)
-    
+
         self.directory.mkdir(
             parents=True,
             exist_ok=True,
         )
-    
+
         self.metric_name = metric_name
-    
+
         self.mode = mode.lower()
-    
-        self.best_metric = (
-            float("inf")
-            if self.mode == "min"
-            else float("-inf")
-        )
-    
+
+        self.best_metric = float("inf") if self.mode == "min" else float("-inf")
+
         logger.info(
             "Checkpoint directory: {}",
             self.directory,
         )
-
 
     def save(
         self,
@@ -72,53 +67,33 @@ class CheckpointManager:
         """
         Save checkpoint.
         """
-    
+
         checkpoint = {
-    
             "epoch": epoch,
-    
-            "model_state_dict":
-                model.state_dict(),
-    
-            "optimizer_state_dict":
-                optimizer.state_dict(),
-    
-            "scheduler_state_dict":
-                (
-                    scheduler.state_dict()
-                    if scheduler is not None
-                    else None
-                ),
-    
-            "scaler_state_dict":
-                (
-                    scaler.state_dict()
-                    if scaler is not None
-                    else None
-                ),
-    
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "scheduler_state_dict": (
+                scheduler.state_dict() if scheduler is not None else None
+            ),
+            "scaler_state_dict": (scaler.state_dict() if scaler is not None else None),
             "metrics": metrics,
-    
-            "timestamp":
-                datetime.now().isoformat(),
-    
+            "timestamp": datetime.now().isoformat(),
             "version": "1.0",
         }
-    
+
         path = self.directory / filename
-    
+
         torch.save(
             checkpoint,
             path,
         )
-    
+
         logger.info(
             "Checkpoint saved: {}",
             path.name,
         )
-    
-        return path
 
+        return path
 
     def load(
         self,
@@ -127,19 +102,18 @@ class CheckpointManager:
         """
         Load checkpoint.
         """
-    
+
         checkpoint = torch.load(
             path,
             map_location="cpu",
         )
-    
+
         logger.info(
             "Checkpoint loaded: {}",
             Path(path).name,
         )
-    
-        return checkpoint
 
+        return checkpoint
 
     def save_best(
         self,
@@ -150,34 +124,26 @@ class CheckpointManager:
         """
         Save best checkpoint.
         """
-    
+
         improved = (
-    
             metric < self.best_metric
-    
             if self.mode == "min"
-    
-            else
-    
-            metric > self.best_metric
-    
+            else metric > self.best_metric
         )
-    
+
         if not improved:
-    
+
             return False
-    
+
         self.best_metric = metric
-    
+
         self.save(
             filename="best_model.pt",
             **kwargs,
         )
-    
-        logger.info(
-            "New best checkpoint saved."
-        )
-    
+
+        logger.info("New best checkpoint saved.")
+
         return True
 
     def save_last(
@@ -187,7 +153,7 @@ class CheckpointManager:
         """
         Save latest checkpoint.
         """
-    
+
         self.save(
             filename="last_checkpoint.pt",
             **kwargs,
@@ -200,20 +166,14 @@ class CheckpointManager:
         """
         Check if checkpoint exists.
         """
-    
-        return (
-            self.directory / filename
-        ).exists()
 
+        return (self.directory / filename).exists()
 
     def latest_checkpoint(
         self,
     ) -> Path:
-    
-        return (
-            self.directory
-            / "last_checkpoint.pt"
-        )
+
+        return self.directory / "last_checkpoint.pt"
 
     def cleanup(
         self,
@@ -222,21 +182,17 @@ class CheckpointManager:
         """
         Remove old checkpoints.
         """
-    
+
         checkpoints = sorted(
-    
             self.directory.glob("*.pt"),
-    
             key=lambda file: file.stat().st_mtime,
-    
             reverse=True,
-    
         )
-    
+
         for checkpoint in checkpoints[keep:]:
-    
+
             checkpoint.unlink()
-    
+
             logger.info(
                 "Deleted {}",
                 checkpoint.name,

@@ -5,10 +5,12 @@ import torch.nn as nn
 
 from app.utils.logger import logger
 
+
 class ClassificationHead(nn.Module):
     """
     Predict class logits for every object query.
     """
+
     def __init__(
         self,
         embedding_dim: int = 256,
@@ -16,39 +18,22 @@ class ClassificationHead(nn.Module):
         hidden_dim: int = 512,
         dropout: float = 0.1,
     ) -> None:
-    
+
         super().__init__()
-    
+
         self.embedding_dim = embedding_dim
-    
+
         self.num_classes = num_classes
 
         self.classifier = nn.Sequential(
-        
-            nn.Linear(
-                embedding_dim,
-                hidden_dim
-            ),
-
+            nn.Linear(embedding_dim, hidden_dim),
             nn.ReLU(inplace=True),
-
-            nn.Linear(
-                hidden_dim,
-                hidden_dim
-            ),
-
+            nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(inplace=True),
-
-            nn.Linear(
-                hidden_dim,
-                num_classes
-            ),
-        
+            nn.Linear(hidden_dim, num_classes),
         )
 
-        logger.info(
-            "ClassificationHead initialized."
-        )
+        logger.info("ClassificationHead initialized.")
 
     def forward(
         self,
@@ -58,18 +43,18 @@ class ClassificationHead(nn.Module):
         Parameters
         ----------
         queries
-    
+
             (B,Q,C)
-    
+
         Returns
         -------
         torch.Tensor
-    
+
             Class logits
-    
+
             (B,Q,num_classes)
         """
-    
+
         return self.classifier(
             queries,
         )
@@ -81,5 +66,5 @@ class ClassificationHead(nn.Module):
         """
         Number of predicted classes.
         """
-    
+
         return self.num_classes

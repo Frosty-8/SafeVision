@@ -31,6 +31,7 @@ class DetectionOutput:
 
     queries: torch.Tensor | None = None
 
+
 @dataclass(slots=True)
 class DetectionResult:
     """
@@ -57,6 +58,7 @@ class DetectionTarget:
     labels: torch.Tensor
 
     boxes: torch.Tensor
+
 
 @dataclass(slots=True)
 class LossOutput:

@@ -16,5 +16,5 @@ __all__ = [
     "RiskPrediction",
     "XGBoostTrainingReport",
     "DetectionOutput",
-    "DetectionResult"
+    "DetectionResult",
 ]

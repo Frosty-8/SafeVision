@@ -3,11 +3,9 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from app.models.detector.deformable_attention import (
-    DeformableAttention,
-    SpatialShape
-)
+from app.models.detector.deformable_attention import DeformableAttention, SpatialShape
 from app.utils.logger import logger
+
 
 class DecoderLayer(nn.Module):
     """
@@ -22,24 +20,24 @@ class DecoderLayer(nn.Module):
         mlp_ratio: int = 4,
         dropout: float = 0.1,
     ) -> None:
-    
+
         super().__init__()
-    
+
         self.self_attention = nn.MultiheadAttention(
             embed_dim=embedding_dim,
             num_heads=num_heads,
             dropout=dropout,
             batch_first=True,
         )
-    
+
         self.cross_attention = DeformableAttention(
             embedding_dim=embedding_dim,
             num_heads=num_heads,
             num_points=num_points,
         )
-    
+
         hidden_dim = embedding_dim * mlp_ratio
-    
+
         self.ffn = nn.Sequential(
             nn.Linear(embedding_dim, hidden_dim),
             nn.GELU(),
@@ -47,11 +45,10 @@ class DecoderLayer(nn.Module):
             nn.Linear(hidden_dim, embedding_dim),
             nn.Dropout(dropout),
         )
-    
+
         self.norm1 = nn.LayerNorm(embedding_dim)
         self.norm2 = nn.LayerNorm(embedding_dim)
         self.norm3 = nn.LayerNorm(embedding_dim)
-
 
     def forward(
         self,
@@ -82,12 +79,13 @@ class DecoderLayer(nn.Module):
         ffn_output = self.ffn(
             queries,
         )
-        
+
         queries = self.norm3(
             queries + ffn_output,
         )
-        
+
         return queries
+
 
 class TransformerDecoder(nn.Module):
     def __init__(
@@ -98,14 +96,14 @@ class TransformerDecoder(nn.Module):
         num_heads: int = 8,
         num_points: int = 4,
     ) -> None:
-    
+
         super().__init__()
-    
+
         self.query_embeddings = nn.Embedding(
             num_queries,
             embedding_dim,
         )
-    
+
         self.layers = nn.ModuleList(
             [
                 DecoderLayer(
@@ -116,27 +114,20 @@ class TransformerDecoder(nn.Module):
                 for _ in range(num_layers)
             ]
         )
-    
+
         self.num_queries = num_queries
-    
+
         self.embedding_dim = embedding_dim
-    
-        logger.info(
-            "TransformerDecoder initialized."
-        )
+
+        logger.info("TransformerDecoder initialized.")
 
     def forward(
         self,
         memory: torch.Tensor,
     ) -> torch.Tensor:
         batch_size, channels, height, width = memory.shape
-        
-        memory = (
-            memory
-            .flatten(2)
-            .transpose(1, 2)
-        )
 
+        memory = memory.flatten(2).transpose(1, 2)
 
         spatial_shape = SpatialShape(
             height=height,
@@ -144,7 +135,7 @@ class TransformerDecoder(nn.Module):
         )
 
         queries = self.query_embeddings.weight.unsqueeze(0)
-        
+
         queries = queries.expand(
             batch_size,
             -1,
@@ -152,12 +143,11 @@ class TransformerDecoder(nn.Module):
         )
 
         for layer in self.layers:
-        
+
             queries = layer(
                 queries,
                 memory,
                 spatial_shape,
             )
-
 
         return queries

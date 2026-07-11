@@ -19,10 +19,7 @@ class CameraEncoder(nn.Module):
     suitable for sensor fusion.
     """
 
-    def __init__(self, 
-        embedding_dim: int = 256,
-       pretrained: bool = True
-    ) -> None:
+    def __init__(self, embedding_dim: int = 256, pretrained: bool = True) -> None:
         super().__init__()
 
         self.embedding_dim = embedding_dim
@@ -33,10 +30,7 @@ class CameraEncoder(nn.Module):
 
         self.projection = self._build_projection()
 
-        logger.info(
-            "CameraEncoder Initialized."
-        )
-
+        logger.info("CameraEncoder Initialized.")
 
     def _build_backbone(
         self,
@@ -45,23 +39,12 @@ class CameraEncoder(nn.Module):
         """
         Build CNN backbone.
         """
-    
-        model = resnet18(
-    
-            weights=(
-                ResNet18_Weights.DEFAULT
-                if pretrained
-                else None
-            )
-    
-        )
-    
-        backbone = nn.Sequential(
-            *list(model.children())[:-2]
-        )
-    
-        return backbone
 
+        model = resnet18(weights=(ResNet18_Weights.DEFAULT if pretrained else None))
+
+        backbone = nn.Sequential(*list(model.children())[:-2])
+
+        return backbone
 
     def _build_projection(
         self,
@@ -70,31 +53,20 @@ class CameraEncoder(nn.Module):
         Project backbone features into the
         common fusion embedding dimension.
         """
-    
+
         return nn.Sequential(
-    
             nn.Conv2d(
-    
                 512,
-    
                 self.embedding_dim,
-    
                 kernel_size=1,
-    
             ),
-    
             nn.BatchNorm2d(
-    
                 self.embedding_dim,
-    
             ),
-    
             nn.ReLU(
                 inplace=True,
             ),
-    
         )
-
 
     def forward(
         self,
@@ -102,34 +74,34 @@ class CameraEncoder(nn.Module):
     ) -> torch.Tensor:
         """
         Encode RGB images.
-    
+
         Parameters
         ----------
         images
-    
+
             Tensor
-    
+
             Shape
-    
+
             (B,3,H,W)
-    
+
         Returns
         -------
         Tensor
-    
+
             Shape
-    
+
             (B,256,H',W')
         """
-    
+
         features = self.backbone(
             images,
         )
-    
+
         embeddings = self.projection(
             features,
         )
-    
+
         return embeddings
 
     @property
@@ -139,5 +111,5 @@ class CameraEncoder(nn.Module):
         """
         Output embedding dimension.
         """
-    
+
         return self.embedding_dim

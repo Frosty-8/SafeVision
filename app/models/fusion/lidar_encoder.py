@@ -17,27 +17,27 @@ import torch.nn as nn
 
 from app.utils.logger import logger
 
+
 class LiDAREncoder(nn.Module):
     """
     Encodes LiDAR BEV features into the common embedding space.
     """
+
     def __init__(
         self,
         input_channels: int = 4,
         embedding_dim: int = 256,
     ) -> None:
-    
+
         super().__init__()
-    
+
         self.embedding_dim = embedding_dim
-    
+
         self.encoder = self._build_encoder()
-    
+
         self.projection = self._build_projection()
-    
-        logger.info(
-            "LiDAREncoder initialized."
-        )
+
+        logger.info("LiDAREncoder initialized.")
 
     def _build_encoder(
         self,
@@ -45,20 +45,16 @@ class LiDAREncoder(nn.Module):
         """
         Build LiDAR encoder.
         """
-    
+
         return nn.Sequential(
-    
             nn.Conv2d(
                 4,
                 64,
                 kernel_size=3,
                 padding=1,
             ),
-    
             nn.BatchNorm2d(64),
-    
             nn.ReLU(inplace=True),
-    
             nn.Conv2d(
                 64,
                 128,
@@ -66,11 +62,8 @@ class LiDAREncoder(nn.Module):
                 stride=2,
                 padding=1,
             ),
-    
             nn.BatchNorm2d(128),
-    
             nn.ReLU(inplace=True),
-    
             nn.Conv2d(
                 128,
                 256,
@@ -78,9 +71,7 @@ class LiDAREncoder(nn.Module):
                 stride=2,
                 padding=1,
             ),
-    
             nn.BatchNorm2d(256),
-    
             nn.ReLU(inplace=True),
         )
 
@@ -91,19 +82,16 @@ class LiDAREncoder(nn.Module):
         Project features into the common
         embedding dimension.
         """
-    
+
         return nn.Sequential(
-    
             nn.Conv2d(
                 256,
                 self.embedding_dim,
                 kernel_size=1,
             ),
-    
             nn.BatchNorm2d(
                 self.embedding_dim,
             ),
-    
             nn.ReLU(inplace=True),
         )
 
@@ -113,28 +101,28 @@ class LiDAREncoder(nn.Module):
     ) -> torch.Tensor:
         """
         Encode LiDAR features.
-    
+
         Parameters
         ----------
         lidar
-    
+
             (B,C,H,W)
-    
+
         Returns
         -------
         Tensor
-    
+
             (B,256,H,W)
         """
-    
+
         features = self.encoder(
             lidar,
         )
-    
+
         embeddings = self.projection(
             features,
         )
-    
+
         return embeddings
 
     @property
@@ -144,5 +132,5 @@ class LiDAREncoder(nn.Module):
         """
         Output embedding dimension.
         """
-    
+
         return self.embedding_dim

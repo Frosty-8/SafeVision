@@ -17,12 +17,13 @@ class BaseDetector(
     Every detector must implement
     forward().
     """
+
     def __init__(
         self,
     ) -> None:
-    
+
         super().__init__()
-    
+
         logger.info(
             "{} initialized.",
             self.__class__.__name__,
@@ -36,7 +37,7 @@ class BaseDetector(
         """
         Run detector inference.
         """
-    
+
         raise NotImplementedError
 
     @torch.no_grad()
@@ -47,9 +48,9 @@ class BaseDetector(
         """
         Perform inference.
         """
-    
+
         self.eval()
-    
+
         return self.forward(
             features,
         )
@@ -60,14 +61,12 @@ class BaseDetector(
         """
         Freeze every parameter.
         """
-    
+
         for parameter in self.parameters():
-    
+
             parameter.requires_grad = False
-    
-        logger.info(
-            "Detector frozen."
-        )
+
+        logger.info("Detector frozen.")
 
     def unfreeze(
         self,
@@ -75,14 +74,12 @@ class BaseDetector(
         """
         Unfreeze every parameter.
         """
-    
+
         for parameter in self.parameters():
-    
+
             parameter.requires_grad = True
-    
-        logger.info(
-            "Detector unfrozen."
-        )
+
+        logger.info("Detector unfrozen.")
 
     def save_weights(
         self,
@@ -91,12 +88,12 @@ class BaseDetector(
         """
         Save model weights.
         """
-    
+
         torch.save(
             self.state_dict(),
             path,
         )
-    
+
         logger.info(
             "Weights saved to '{}'.",
             path,
@@ -110,16 +107,16 @@ class BaseDetector(
         """
         Load model weights.
         """
-    
+
         state = torch.load(
             path,
             map_location=map_location,
         )
-    
+
         self.load_state_dict(
             state,
         )
-    
+
         logger.info(
             "Weights loaded from '{}'.",
             path,
@@ -132,14 +129,8 @@ class BaseDetector(
         """
         Total parameters.
         """
-    
-        return sum(
-    
-            parameter.numel()
-    
-            for parameter in self.parameters()
-    
-        )
+
+        return sum(parameter.numel() for parameter in self.parameters())
 
     @property
     def trainable_parameters(
@@ -148,15 +139,11 @@ class BaseDetector(
         """
         Trainable parameters.
         """
-    
+
         return sum(
-    
             parameter.numel()
-    
             for parameter in self.parameters()
-    
             if parameter.requires_grad
-    
         )
 
     def summary(
@@ -165,17 +152,17 @@ class BaseDetector(
         """
         Print detector summary.
         """
-    
+
         logger.info(
             "Detector: {}",
             self.__class__.__name__,
         )
-    
+
         logger.info(
             "Parameters: {:,}",
             self.num_parameters,
         )
-    
+
         logger.info(
             "Trainable: {:,}",
             self.trainable_parameters,
@@ -189,7 +176,5 @@ class BaseDetector(
         Return the device where the model
         currently resides.
         """
-    
-        return next(
-            self.parameters()
-        ).device
+
+        return next(self.parameters()).device

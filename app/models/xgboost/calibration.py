@@ -41,17 +41,13 @@ class ProbabilityCalibrator:
             "isotonic",
         }:
 
-            raise ValueError(
-                "Unsupported calibration method."
-            )
+            raise ValueError("Unsupported calibration method.")
 
         self.method = method
 
         self.model: CalibratedClassifierCV | None = None
 
-        logger.info(
-            "ProbabilityCalibrator initialized."
-        )
+        logger.info("ProbabilityCalibrator initialized.")
 
     def fit(
         self,
@@ -62,26 +58,19 @@ class ProbabilityCalibrator:
         """
         Fit the probability calibrator.
         """
-    
+
         self.model = CalibratedClassifierCV(
-    
             estimator=classifier,
-    
             method=self.method,
-    
             cv="prefit",
-    
         )
-    
+
         self.model.fit(
             x,
             y,
         )
-    
-        logger.info(
-            "Calibration model fitted."
-        )
 
+        logger.info("Calibration model fitted.")
 
     def predict(
         self,
@@ -90,13 +79,12 @@ class ProbabilityCalibrator:
         """
         Return calibrated probabilities.
         """
-    
+
         self._check_fitted()
-    
+
         return self.model.predict_proba(
             x,
         )[:, 1]
-
 
     def evaluate(
         self,
@@ -106,11 +94,11 @@ class ProbabilityCalibrator:
         """
         Evaluate calibration quality.
         """
-    
+
         probabilities = self.predict(
             x,
         )
-    
+
         return brier_score_loss(
             y,
             probabilities,
@@ -123,18 +111,15 @@ class ProbabilityCalibrator:
         """
         Save calibration model.
         """
-    
+
         self._check_fitted()
-    
+
         joblib.dump(
             self.model,
             path,
         )
-    
-        logger.info(
-            "Calibration model saved."
-        )
 
+        logger.info("Calibration model saved.")
 
     def load(
         self,
@@ -143,24 +128,20 @@ class ProbabilityCalibrator:
         """
         Load calibration model.
         """
-    
+
         self.model = joblib.load(
             path,
         )
-    
-        logger.info(
-            "Calibration model loaded."
-        )
+
+        logger.info("Calibration model loaded.")
 
     def _check_fitted(
         self,
     ) -> None:
-    
+
         if self.model is None:
-    
-            raise RuntimeError(
-                "Calibration model has not been fitted."
-            )
+
+            raise RuntimeError("Calibration model has not been fitted.")
 
     @property
     def is_fitted(
@@ -170,5 +151,5 @@ class ProbabilityCalibrator:
         Whether calibration model
         has been fitted.
         """
-    
+
         return self.model is not None

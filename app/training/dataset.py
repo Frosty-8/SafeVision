@@ -11,6 +11,7 @@ from app.datasets.loaders.base_loader import BaseDatasetLoader
 from app.utils.logger import logger
 from typing import cast
 
+
 class SafeVisionDataset(Dataset):
     """
     Pytorch Dataset for SafeVision
@@ -18,9 +19,8 @@ class SafeVisionDataset(Dataset):
     Supports object detection datasets using the BaseDatasetLoader interface.
     """
 
-    def __init__(self,
-        loader: BaseDatasetLoader,
-        transforms: Any | None = None
+    def __init__(
+        self, loader: BaseDatasetLoader, transforms: Any | None = None
     ) -> None:
         self.loader = loader
 
@@ -28,11 +28,7 @@ class SafeVisionDataset(Dataset):
 
         self.image_ids = loader.image_ids
 
-        logger.info(
-            "Initialized SafeVisionDataset with {} image",
-            len(self.image_ids)
-        )
-
+        logger.info("Initialized SafeVisionDataset with {} image", len(self.image_ids))
 
     def __len__(
         self,
@@ -40,7 +36,7 @@ class SafeVisionDataset(Dataset):
         """
         Return dataset size.
         """
-    
+
         return len(
             self.image_ids,
         )
@@ -52,35 +48,33 @@ class SafeVisionDataset(Dataset):
         """
         Return one training sample.
         """
-    
+
         image_id = self.image_ids[index]
-    
+
         image = self._load_image(
             image_id,
         )
-    
+
         target = self._load_target(
             image_id,
         )
-    
+
         if self.transforms is not None:
-    
+
             image, target = self.transforms(
                 image,
                 target,
             )
-    
+
         image = self._to_tensor(
             image,
         )
-    
+
         target = self._to_tensor_target(
             target,
         )
-    
+
         return image, target
-
-
 
     def _load_image(
         self,
@@ -89,28 +83,27 @@ class SafeVisionDataset(Dataset):
         """
         Load image from disk.
         """
-    
+
         image_path = self.loader.get_image_path(
             image_id,
         )
-    
+
         image = cv2.imread(
             str(image_path),
         )
-    
+
         if image is None:
-    
+
             raise FileNotFoundError(
                 image_path,
             )
-    
+
         image = cv2.cvtColor(
             image,
             cv2.COLOR_BGR2RGB,
         )
-    
-        return image
 
+        return image
 
     def _load_target(
         self,
@@ -119,18 +112,18 @@ class SafeVisionDataset(Dataset):
         """
         Load annotations for one image.
         """
-    
+
         annotations = self.loader.get_annotations(
             image_id,
         )
-    
+
         boxes = []
         labels = []
-    
+
         for annotation in annotations:
-    
+
             x, y, w, h = annotation.bbox
-    
+
             boxes.append(
                 [
                     x,
@@ -139,11 +132,11 @@ class SafeVisionDataset(Dataset):
                     y + h,
                 ]
             )
-    
+
             labels.append(
                 annotation.category_id,
             )
-    
+
         return {
             "boxes": np.asarray(
                 boxes,
@@ -156,7 +149,6 @@ class SafeVisionDataset(Dataset):
             "image_id": image_id,
         }
 
-
     def _to_tensor(
         self,
         image: np.ndarray,
@@ -164,15 +156,15 @@ class SafeVisionDataset(Dataset):
         """
         Convert an HWC NumPy image to a CHW float tensor in the range [0, 1].
         """
-    
+
         tensor = cast(torch.Tensor, torch.from_numpy(image))
-    
+
         tensor = tensor.permute(
             2,
             0,
             1,
         )
-    
+
         return tensor.float() / 255.0
 
     def _to_tensor_target(
@@ -182,20 +174,20 @@ class SafeVisionDataset(Dataset):
         """
         Convert targets to tensors.
         """
-    
+
         target["boxes"] = torch.as_tensor(
             target["boxes"],
             dtype=torch.float32,
         )
-    
+
         target["labels"] = torch.as_tensor(
             target["labels"],
             dtype=torch.int64,
         )
-    
+
         target["image_id"] = torch.tensor(
             target["image_id"],
             dtype=torch.int64,
         )
-    
+
         return target

@@ -39,10 +39,7 @@ class FusionHead(nn.Module):
 
         self.radar_projection = self._build_projection()
 
-        logger.info(
-            "FusionHead initialized."
-        )
-
+        logger.info("FusionHead initialized.")
 
     def _build_projection(
         self,
@@ -50,26 +47,21 @@ class FusionHead(nn.Module):
         """
         Build a projection layer.
         """
-    
+
         return nn.Sequential(
-    
             nn.Conv2d(
                 self.embedding_dim,
                 self.embedding_dim,
                 kernel_size=1,
                 bias=False,
             ),
-    
             nn.BatchNorm2d(
                 self.embedding_dim,
             ),
-    
             nn.ReLU(
                 inplace=True,
             ),
         )
-
-
 
     def forward(
         self,
@@ -84,25 +76,21 @@ class FusionHead(nn.Module):
         """
         Align feature maps before fusion.
         """
-    
+
         camera_features = self.camera_projection(
             camera_features,
         )
-    
+
         lidar_features = self.lidar_projection(
             lidar_features,
         )
-    
+
         radar_features = self.radar_projection(
             radar_features,
         )
-    
+
         return (
-    
             camera_features,
-    
             lidar_features,
-    
             radar_features,
-    
         )

@@ -38,30 +38,29 @@ class DetectionHead(nn.Module):
     """
     Combines all prediction heads.
     """
+
     def __init__(
         self,
         embedding_dim: int = 256,
         num_classes: int = 91,
     ) -> None:
-    
+
         super().__init__()
-    
+
         self.classification = ClassificationHead(
             embedding_dim=embedding_dim,
             num_classes=num_classes,
         )
-    
+
         self.box_regression = BoundingBoxHead(
             embedding_dim=embedding_dim,
         )
-    
+
         self.confidence = ConfidenceHead(
             embedding_dim=embedding_dim,
         )
-    
-        logger.info(
-            "DetectionHead initialized."
-        )
+
+        logger.info("DetectionHead initialized.")
 
     def forward(
         self,
@@ -70,19 +69,19 @@ class DetectionHead(nn.Module):
         """
         Predict object detections.
         """
-    
+
         class_logits = self.classification(
             queries,
         )
-    
+
         boxes = self.box_regression(
             queries,
         )
-    
+
         confidence = self.confidence(
             queries,
         )
-    
+
         return DetectionOutput(
             class_logits=class_logits,
             boxes=boxes,
@@ -96,7 +95,7 @@ class DetectionHead(nn.Module):
         """
         Number of predicted classes.
         """
-    
+
         return self.classification.output_dim
 
     @property
@@ -106,5 +105,5 @@ class DetectionHead(nn.Module):
         """
         Bounding box dimension.
         """
-    
+
         return self.box_regression.output_dim

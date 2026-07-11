@@ -27,17 +27,14 @@ class TrainingHistory:
     """
     Stores training history.
     """
+
     def __init__(
         self,
     ) -> None:
-    
+
         self.history: list[EpochMetrics] = []
-    
-        logger.info(
-            "TrainingHistory initialized."
-        )
 
-
+        logger.info("TrainingHistory initialized.")
 
     def update(
         self,
@@ -46,12 +43,10 @@ class TrainingHistory:
         """
         Add epoch metrics.
         """
-    
+
         self.history.append(
             metrics,
         )
-
-
 
     def latest(
         self,
@@ -59,13 +54,12 @@ class TrainingHistory:
         """
         Return latest epoch.
         """
-    
-        if not self.history:
-    
-            return None
-    
-        return self.history[-1]
 
+        if not self.history:
+
+            return None
+
+        return self.history[-1]
 
     def best(
         self,
@@ -75,54 +69,49 @@ class TrainingHistory:
         """
         Return best epoch.
         """
-    
-        if not self.history:
-    
-            return None
-    
-        return min(
-            self.history,
-            key=lambda metric: getattr(
-                metric,
-                monitor,
-            ),
-        ) if mode == "min" else max(
-            self.history,
-            key=lambda metric: getattr(
-                metric,
-                monitor,
-            ),
-        )
 
+        if not self.history:
+
+            return None
+
+        return (
+            min(
+                self.history,
+                key=lambda metric: getattr(
+                    metric,
+                    monitor,
+                ),
+            )
+            if mode == "min"
+            else max(
+                self.history,
+                key=lambda metric: getattr(
+                    metric,
+                    monitor,
+                ),
+            )
+        )
 
     def summary(
         self,
     ) -> dict[str, float]:
-    
+
         best = self.best()
-    
+
         latest = self.latest()
-    
+
         if best is None or latest is None:
-    
+
             return {}
-    
+
         return {
-    
             "epochs": len(
                 self.history,
             ),
-    
-            "best_validation_loss":
-                best.validation_loss,
-    
-            "latest_train_loss":
-                latest.train_loss,
-    
-            "latest_validation_loss":
-                latest.validation_loss,
+            "best_validation_loss": best.validation_loss,
+            "latest_train_loss": latest.train_loss,
+            "latest_validation_loss": latest.validation_loss,
         }
-
 
     def save(
         self,
@@ -131,29 +120,20 @@ class TrainingHistory:
         """
         Save history.
         """
-    
+
         with open(
             path,
             "w",
             encoding="utf-8",
         ) as file:
-    
+
             json.dump(
-    
-                [
-                    asdict(item)
-                    for item in self.history
-                ],
-    
+                [asdict(item) for item in self.history],
                 file,
-    
                 indent=4,
             )
-    
-        logger.info(
-            "Training history saved."
-        )
 
+        logger.info("Training history saved.")
 
     def load(
         self,
@@ -162,26 +142,22 @@ class TrainingHistory:
         """
         Load history.
         """
-    
+
         with open(
             path,
             encoding="utf-8",
         ) as file:
-    
+
             data = json.load(
                 file,
             )
-    
+
         self.history = [
-    
             EpochMetrics(
                 **item,
             )
-    
             for item in data
-    
         ]
-
 
     def dataframe(
         self,
@@ -189,18 +165,11 @@ class TrainingHistory:
         """
         Return history as DataFrame.
         """
-    
-        return pd.DataFrame(
-    
-            [
-                asdict(item)
-                for item in self.history
-            ]
-    
-        )
+
+        return pd.DataFrame([asdict(item) for item in self.history])
 
     def clear(
         self,
     ) -> None:
-    
+
         self.history.clear()

@@ -15,30 +15,16 @@ class MixedPrecisionTrainer:
     Automatic Mixed Precision manager.
     """
 
-    def __init__(
-        self,
-        enabled: bool = True,
-        device: str = "cuda"
-    ) -> None:
+    def __init__(self, enabled: bool = True, device: str = "cuda") -> None:
         self.enabled = (
-            enabled
-            and torch.cuda.is_available()
-            and device.startswith("cuda")
+            enabled and torch.cuda.is_available() and device.startswith("cuda")
         )
 
         self.device = device
 
-        self.scaler = GradScaler(
-            device=device,
-            enabled=self.enabled
-        )
+        self.scaler = GradScaler(device=device, enabled=self.enabled)
 
-        logger.info(
-            "Mixed Precision Enabled: {}",
-            self.enabled
-        )
-
-
+        logger.info("Mixed Precision Enabled: {}", self.enabled)
 
     def autocast(
         self,
@@ -46,15 +32,14 @@ class MixedPrecisionTrainer:
         """
         Return autocast context.
         """
-    
+
         if not self.enabled:
-    
+
             return nullcontext()
-    
+
         return autocast(
             device_type=self.device,
         )
-
 
     def backward(
         self,
@@ -63,15 +48,14 @@ class MixedPrecisionTrainer:
         """
         Backpropagation.
         """
-    
-        if self.enabled:
-    
-            self.scaler.scale(loss).backward()
-    
-        else:
-    
-            loss.backward()
 
+        if self.enabled:
+
+            self.scaler.scale(loss).backward()
+
+        else:
+
+            loss.backward()
 
     def step(
         self,
@@ -80,17 +64,16 @@ class MixedPrecisionTrainer:
         """
         Optimizer step.
         """
-    
+
         if self.enabled:
-    
+
             self.scaler.step(
                 optimizer,
             )
-    
-        else:
-    
-            optimizer.step()
 
+        else:
+
+            optimizer.step()
 
     def update(
         self,
@@ -98,11 +81,10 @@ class MixedPrecisionTrainer:
         """
         Update GradScaler.
         """
-    
-        if self.enabled:
-    
-            self.scaler.update()
 
+        if self.enabled:
+
+            self.scaler.update()
 
     def state_dict(
         self,
@@ -110,9 +92,8 @@ class MixedPrecisionTrainer:
         """
         Return scaler state.
         """
-    
-        return self.scaler.state_dict()
 
+        return self.scaler.state_dict()
 
     def load_state_dict(
         self,
@@ -121,9 +102,7 @@ class MixedPrecisionTrainer:
         """
         Restore scaler state.
         """
-    
+
         self.scaler.load_state_dict(
             state,
         )
-
-    

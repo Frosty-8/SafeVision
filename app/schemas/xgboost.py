@@ -15,15 +15,18 @@ from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
 
+
 class CalibrationMethod(str, Enum):
     SIGMOID = "sigmoid"
     ISOTONIC = "isotonic"
+
 
 class RiskDecision(str, Enum):
 
     SAFE = "safe"
 
     UNSAFE = "unsafe"
+
 
 @dataclass(slots=True)
 class DetectionFeatures:
@@ -96,8 +99,6 @@ class RiskPrediction:
     XGBoost model.
     """
 
-    
-    
     probability: float
 
     risk_score: float

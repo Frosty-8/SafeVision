@@ -33,31 +33,19 @@ class FusionTransformer(nn.Module):
         super().__init__()
 
         encoder_layer = nn.TransformerEncoderLayer(
-
             d_model=embedding_dim,
-
             nhead=num_heads,
-
             dropout=dropout,
-
             batch_first=True,
-
             activation="gelu",
-
         )
 
         self.encoder = nn.TransformerEncoder(
-
             encoder_layer,
-
             num_layers=num_layers,
-
         )
 
-        logger.info(
-            "FusionTransformer initialized."
-        )
-
+        logger.info("FusionTransformer initialized.")
 
     def _flatten(
         self,
@@ -69,21 +57,12 @@ class FusionTransformer(nn.Module):
         """
         Convert feature map into tokens.
         """
-    
-        batch, channels, height, width = features.shape
-    
-        tokens = (
-    
-            features
-    
-            .flatten(2)
-    
-            .transpose(1, 2)
-    
-        )
-    
-        return tokens, (height, width)
 
+        batch, channels, height, width = features.shape
+
+        tokens = features.flatten(2).transpose(1, 2)
+
+        return tokens, (height, width)
 
     def _unflatten(
         self,
@@ -93,31 +72,17 @@ class FusionTransformer(nn.Module):
         """
         Restore feature map.
         """
-    
-        height, width = shape
-    
-        batch, _, channels = tokens.shape
-    
-        return (
-    
-            tokens
-    
-            .transpose(1,2)
-    
-            .reshape(
-    
-                batch,
-    
-                channels,
-    
-                height,
-    
-                width,
-    
-            )
-    
-        )
 
+        height, width = shape
+
+        batch, _, channels = tokens.shape
+
+        return tokens.transpose(1, 2).reshape(
+            batch,
+            channels,
+            height,
+            width,
+        )
 
     def forward(
         self,
@@ -128,45 +93,35 @@ class FusionTransformer(nn.Module):
         """
         Fuse three sensor modalities.
         """
-    
-        camera,spatial = self._flatten(
+
+        camera, spatial = self._flatten(
             camera_features,
         )
-    
-        lidar,_ = self._flatten(
+
+        lidar, _ = self._flatten(
             lidar_features,
         )
-    
-        radar,_ = self._flatten(
+
+        radar, _ = self._flatten(
             radar_features,
         )
-    
+
         tokens = torch.cat(
-    
             [
-    
                 camera,
-    
                 lidar,
-    
                 radar,
-    
             ],
-    
             dim=1,
-    
         )
-    
+
         fused = self.encoder(
             tokens,
         )
-    
+
         fused = fused[:, : camera.shape[1]]
-    
+
         return self._unflatten(
-    
             fused,
-    
             spatial,
-    
         )

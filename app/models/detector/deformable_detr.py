@@ -35,7 +35,6 @@ from app.schemas.detection import (
 from app.utils.logger import logger
 
 
-
 class DeformableDETR(nn.Module):
     """
     SafeVision object detector.
@@ -53,76 +52,42 @@ class DeformableDETR(nn.Module):
         num_points: int = 4,
         criterion: SetCriterion | None = None,
     ) -> None:
-    
+
         super().__init__()
 
         self.transformer = DeformableTransformer(
-        
             input_channels=input_channels,
-        
             embedding_dim=embedding_dim,
-        
             num_encoder_layers=num_encoder_layers,
-        
             num_decoder_layers=num_decoder_layers,
-        
             num_heads=num_heads,
-        
             num_points=num_points,
-        
             num_queries=num_queries,
-        
         )
-
 
         self.detection_head = DetectionHead(
-        
             embedding_dim=embedding_dim,
-        
             num_classes=num_classes,
-        
         )
 
-        self.criterion = (
-            criterion if criterion is not None else SetCriterion()
-        )
+        self.criterion = criterion if criterion is not None else SetCriterion()
 
-        logger.info(
-            "DeformableDETR initialized."
-        )
-
+        logger.info("DeformableDETR initialized.")
 
     def forward(
         self,
         features: torch.Tensor,
-        targets: list[
-            DetectionTarget
-        ] | None = None,
+        targets: list[DetectionTarget] | None = None,
     ) -> DetectionOutput | LossOutput:
-        queries = self.transformer(
-            features
-        )
+        queries = self.transformer(features)
 
-        detections = self.detection_head(
-            queries
-        )
+        detections = self.detection_head(queries)
 
-        if (
-        
-            self.training
-        
-            and
-        
-            targets is not None
-        
-        ):
-        
+        if self.training and targets is not None:
+
             return self.criterion(
-        
                 detections,
-        
                 targets,
-        
             )
 
         return detections
@@ -131,15 +96,14 @@ class DeformableDETR(nn.Module):
     def num_queries(
         self,
     ) -> int:
-    
-        return self.transformer.num_queries
 
+        return self.transformer.num_queries
 
     @property
     def embedding_dim(
         self,
     ) -> int:
-    
+
         return self.transformer.output_dim
 
     def freeze_backbone(
@@ -148,11 +112,10 @@ class DeformableDETR(nn.Module):
         """
         Freeze backbone parameters.
         """
-    
-        for parameter in self.transformer.backbone.parameters():
-    
-            parameter.requires_grad = False
 
+        for parameter in self.transformer.backbone.parameters():
+
+            parameter.requires_grad = False
 
     def unfreeze_backbone(
         self,
@@ -160,51 +123,36 @@ class DeformableDETR(nn.Module):
         """
         Unfreeze backbone parameters.
         """
-    
+
         for parameter in self.transformer.backbone.parameters():
-    
+
             parameter.requires_grad = True
 
     @property
     def num_parameters(
         self,
     ) -> int:
-    
-        return sum(
-    
-            parameter.numel()
-    
-            for parameter in self.parameters()
-    
-        )
+
+        return sum(parameter.numel() for parameter in self.parameters())
 
     @property
     def trainable_parameters(
         self,
     ) -> int:
-    
+
         return sum(
-    
             parameter.numel()
-    
             for parameter in self.parameters()
-    
             if parameter.requires_grad
-    
         )
 
     def summary(
         self,
     ) -> dict[str, int]:
-    
+
         return {
-    
             "parameters": self.num_parameters,
-    
             "trainable": self.trainable_parameters,
-    
             "queries": self.num_queries,
-    
             "embedding_dim": self.embedding_dim,
-    
         }
