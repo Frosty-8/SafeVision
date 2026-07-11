@@ -1,188 +1,296 @@
-<!--"""
-SafeVision AI
+<!--from __future__ import annotations
 
-Training Callbacks
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
-Provides callback interfaces for the training loop.
-
-Author: Sarthak Dongare
-License: Apache-2.0
-"""
-
-from __future__ import annotations
-
-from abc import ABC
-from typing import Any
-
-from app.utils.logger import logger
+from app.schemas.detection import (
+    DetectionOutput,
+    DetectionTarget,
+)
 
 
-class Callback(ABC):
+def box_cxcywh_to_xyxy(
+    boxes: torch.Tensor,
+) -> torch.Tensor:
     """
-    Base callback.
+    Convert normalized boxes.
 
-    Every callback in SafeVision inherits this class.
+    (cx,cy,w,h)
+
+    →
+
+    (x1,y1,x2,y2)
     """
 
-    def on_train_start(
-        self,
-        trainer,
-    ) -> None:
-        """
-        Called before training starts.
-        """
+    cx, cy, w, h = boxes.unbind(
+        dim=-1,
+    )
+
+    return torch.stack(
+
+        (
+
+            cx - w / 2,
+
+            cy - h / 2,
+
+            cx + w / 2,
+
+            cy + h / 2,
+
+        ),
+
+        dim=-1,
+
+    )
+
+def box_area(
+    boxes: torch.Tensor,
+) -> torch.Tensor:
+    """
+    Compute box area.
+    """
+
+    return (
+
+        boxes[..., 2]
+        - boxes[..., 0]
+
+    ).clamp(
+        min=0,
+    ) * (
+
+        boxes[..., 3]
+        - boxes[..., 1]
+
+    ).clamp(
+        min=0,
+    )
+
+
+def box_iou(
+    boxes1: torch.Tensor,
+    boxes2: torch.Tensor,
+) -> torch.Tensor:
+    """
+    Pairwise IoU matrix.
+    """
+    area1 = box_area(
+        boxes1,
+    )
     
-        pass
-
-
-    def on_train_end(
-        self,
-        trainer,
-    ) -> None:
-        """
-        Called after training finishes.
-        """
+    area2 = box_area(
+        boxes2,
+    )
     
-        pass
-
-
-    def on_epoch_start(
-        self,
-        trainer,
-        epoch: int,
-    ) -> None:
-        """
-        Called before each epoch.
-        """
+    lt = torch.maximum(
+        boxes1[:, None, :2],
+        boxes2[:, :2],
+    )
     
-        pass
-
-
-    def on_epoch_end(
-        self,
-        trainer,
-        epoch: int,
-        metrics: dict[str, float],
-    ) -> None:
-        """
-        Called after every epoch.
-        """
+    rb = torch.minimum(
+        boxes1[:, None, 2:],
+        boxes2[:, 2:],
+    )
     
-        pass
-
-    def on_batch_start(
-        self,
-        trainer,
-        batch_index: int,
-    ) -> None:
-        """
-        Called before every batch.
-        """
+    wh = (
     
-        pass
-
-    def on_batch_end(
-        self,
-        trainer,
-        batch_index: int,
-        loss: float,
-    ) -> None:
-        """
-        Called after every batch.
-        """
+        rb
+        - lt
     
-        pass
-
-    def on_validation_start(
-        self,
-        trainer,
-    ) -> None:
-        """
-        Called before validation.
-        """
+    ).clamp(
+        min=0,
+    )
     
-        pass
-
-    def on_validation_end(
-        self,
-        trainer,
-        metrics: dict[str, float],
-    ) -> None:
-        """
-        Called after validation.
-        """
+    intersection = wh[..., 0] * wh[..., 1]
     
-        pass
-
-    def on_checkpoint_save(
-        self,
-        trainer,
-        path: str,
-    ) -> None:
-        """
-        Called after checkpoint saving.
-        """
+    union = (
     
-        pass
-
-    def on_exception(
-        self,
-        trainer,
-        exception: Exception,
-    ) -> None:
-        """
-        Called if training crashes.
-        """
+        area1[:, None]
     
-        logger.exception(
-            "Training crashed.",
+        +
+    
+        area2
+    
+        -
+    
+        intersection
+    
+    )
+    
+    return intersection / (
+        union + 1e-6
+    )
+
+
+def generalized_box_iou(
+    boxes1: torch.Tensor,
+    boxes2: torch.Tensor,
+) -> torch.Tensor:
+    """
+    Pairwise Generalized IoU.
+    """
+    boxes1 = box_cxcywh_to_xyxy(
+        boxes1,
+    )
+    
+    boxes2 = box_cxcywh_to_xyxy(
+        boxes2,
+    )
+
+    iou = box_iou(
+        boxes1,
+        boxes2,
+    )
+
+
+    lt = torch.minimum(
+        boxes1[:, None, :2],
+        boxes2[:, :2],
+    )
+    
+    rb = torch.maximum(
+        boxes1[:, None, 2:],
+        boxes2[:, 2:],
+    )
+    
+    wh = (
+    
+        rb
+        - lt
+    
+    ).clamp(
+        min=0,
+    )
+    
+    area = wh[..., 0] * wh[..., 1]
+
+    area1 = box_area(
+        boxes1,
+    )
+    
+    area2 = box_area(
+        boxes2,
+    )
+    
+    lt_i = torch.maximum(
+        boxes1[:, None, :2],
+        boxes2[:, :2],
+    )
+    
+    rb_i = torch.minimum(
+        boxes1[:, None, 2:],
+        boxes2[:, 2:],
+    )
+    
+    wh_i = (
+    
+        rb_i
+        - lt_i
+    
+    ).clamp(
+        min=0,
+    )
+    
+    intersection = wh_i[..., 0] * wh_i[..., 1]
+    
+    union = (
+    
+        area1[:, None]
+    
+        +
+    
+        area2
+    
+        -
+    
+        intersection
+    
+    )
+
+    return iou - (
+    
+        area - union
+    
+    ) / (
+    
+        area + 1e-6
+    
+    )
+
+
+
+class ClassificationLoss(
+    nn.Module,
+):
+
+    def forward(
+        self,
+        predictions: DetectionOutput,
+        targets: list[DetectionTarget],
+        matches,
+    ) -> torch.Tensor:
+
+        #
+        # Implement Hungarian matched
+        # classification loss.
+        #
+
+        return F.cross_entropy(
+            ...,
         )
 
-class CallbackManager:
-    """
-    Executes callbacks during training.
-    """
-    def __init__(
-        self,
-        callbacks: list[Callback] | None = None,
-    ) -> None:
-    
-        self.callbacks = callbacks or []
 
+class BoundingBoxLoss(
+    nn.Module,
+):
 
-    def register(
+    def forward(
         self,
-        callback: Callback,
-    ) -> None:
-        """
-        Register callback.
-        """
-    
-        self.callbacks.append(
-            callback,
+        predictions: DetectionOutput,
+        targets: list[DetectionTarget],
+        matches,
+    ) -> torch.Tensor:
+
+        return F.l1_loss(
+            ...,
         )
 
-    def notify(
+
+class GIoULoss(
+    nn.Module,
+):
+
+    def forward(
         self,
-        event: str,
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        """
-        Notify every callback of an event.
-        """
-    
-        for callback in self.callbacks:
-    
-            handler = getattr(
-                callback,
-                event,
-                None,
-            )
-    
-            if callable(handler):
-    
-                handler(
-                    *args,
-                    **kwargs,
-                )-->
+        predictions: DetectionOutput,
+        targets: list[DetectionTarget],
+        matches,
+    ) -> torch.Tensor:
+
+        giou = generalized_box_iou(
+            ...,
+        )
+
+        return 1 - giou.mean()
+
+
+class ConfidenceLoss(
+    nn.Module,
+):
+
+    def forward(
+        self,
+        predictions: DetectionOutput,
+        targets: list[DetectionTarget],
+        matches,
+    ) -> torch.Tensor:
+
+        #
+        # Binary confidence
+        #
+
+        return F.binary_cross_entropy(
+            ...,
+        )-->

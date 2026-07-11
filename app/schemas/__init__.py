@@ -4,7 +4,7 @@ from .split import DatasetSplit
 from .statistics import DatasetStatistics
 from .validation import ValidationReport
 from .xgboost import DetectionFeatures, RiskPrediction, XGBoostTrainingReport
-
+from .detection import DetectionOutput, DetectionResult
 
 __all__ = [
     "DatasetInfo",
@@ -14,5 +14,7 @@ __all__ = [
     "ValidationReport",
     "DetectionFeatures",
     "RiskPrediction",
-    "XGBoostTrainingReport"
+    "XGBoostTrainingReport",
+    "DetectionOutput",
+    "DetectionResult"
 ]
