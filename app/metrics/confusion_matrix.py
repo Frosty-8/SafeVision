@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import torch 
+import torch
 
-from app.metrics.iou import (
-    IoUMetric
-)
+from app.metrics.iou import IoUMetric
 
 from app.utils.logger import logger
+
 
 class ConfusionMatrix:
     """
@@ -17,16 +16,14 @@ class ConfusionMatrix:
         self,
         iou_threshold: float = 0.5,
     ) -> None:
-    
+
         self.iou_threshold = iou_threshold
-    
+
         self.iou = IoUMetric()
-    
+
         self.reset()
-    
-        logger.info(
-            "ConfusionMatrix initialized."
-        )
+
+        logger.info("ConfusionMatrix initialized.")
 
     def reset(
         self,
@@ -34,13 +31,13 @@ class ConfusionMatrix:
         """
         Reset statistics.
         """
-    
+
         self.true_positive = 0
-    
+
         self.false_positive = 0
-    
+
         self.false_negative = 0
-    
+
         self.true_negative = 0
 
     def update(
@@ -55,39 +52,24 @@ class ConfusionMatrix:
             predicted_boxes,
             target_boxes,
         )
-        
-        true_positive = int(
-            (
-                ious >= self.iou_threshold
-            ).sum().item()
-        )
-        
-        false_positive = max(
-        
-            len(predicted_boxes)
-        
-            - true_positive,
-        
-            0,
-        
-        )
-        
-        false_negative = max(
-        
-            len(target_boxes)
-        
-            - true_positive,
-        
-            0,
-        
-        )
-        
-        self.true_positive += true_positive
-        
-        self.false_positive += false_positive
-        
-        self.false_negative += false_negative
 
+        true_positive = int((ious >= self.iou_threshold).sum().item())
+
+        false_positive = max(
+            len(predicted_boxes) - true_positive,
+            0,
+        )
+
+        false_negative = max(
+            len(target_boxes) - true_positive,
+            0,
+        )
+
+        self.true_positive += true_positive
+
+        self.false_positive += false_positive
+
+        self.false_negative += false_negative
 
     def matrix(
         self,
@@ -95,31 +77,19 @@ class ConfusionMatrix:
         """
         Return confusion matrix.
         """
-    
+
         return torch.tensor(
-    
             [
-    
                 [
-    
                     self.true_positive,
-    
                     self.false_positive,
-    
                 ],
-    
                 [
-    
                     self.false_negative,
-    
                     self.true_negative,
-    
                 ],
-    
             ],
-    
             dtype=torch.int64,
-    
         )
 
     def summary(
@@ -128,15 +98,10 @@ class ConfusionMatrix:
         """
         Confusion statistics.
         """
-    
+
         return {
-    
             "tp": self.true_positive,
-    
             "fp": self.false_positive,
-    
             "fn": self.false_negative,
-    
             "tn": self.true_negative,
-    
         }

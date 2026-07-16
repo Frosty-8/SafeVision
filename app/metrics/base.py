@@ -14,5 +14,4 @@ class BaseMetric:
 
     def reset(
         self,
-    ) -> None:
-        ...
+    ) -> None: ...

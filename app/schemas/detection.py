@@ -31,6 +31,8 @@ class DetectionOutput:
 
     queries: torch.Tensor | None = None
 
+    labels: torch.Tensor | None = None
+
 
 @dataclass(slots=True)
 class DetectionResult:
@@ -84,7 +86,6 @@ class MatchedBatch:
     labels: torch.Tensor
 
     target_boxes: torch.Tensor
-
 
 
 @dataclass(slots=True)

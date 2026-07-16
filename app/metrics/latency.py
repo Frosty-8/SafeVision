@@ -13,9 +13,7 @@ class LatencyMetric:
     ) -> None:
         self.reset()
 
-        logger.info(
-            "LatencyMetric initialized."
-        )
+        logger.info("LatencyMetric initialized.")
 
     def reset(
         self,
@@ -54,16 +52,12 @@ class LatencyMetric:
         self.total_samples += batch_size
 
         if latency < 0:
-        
-            raise ValueError(
-                "Latency must be non-negative."
-            )
-        
+
+            raise ValueError("Latency must be non-negative.")
+
         if batch_size <= 0:
-        
-            raise ValueError(
-                "Batch size must be positive."
-            )
+
+            raise ValueError("Batch size must be positive.")
 
     def average_latency(
         self,
@@ -76,13 +70,7 @@ class LatencyMetric:
 
             return 0.0
 
-        return (
-
-            self.total_latency
-
-            / self.total_batches
-
-        )
+        return self.total_latency / self.total_batches
 
     def average_latency_ms(
         self,
@@ -91,13 +79,7 @@ class LatencyMetric:
         Average latency per batch in milliseconds.
         """
 
-        return (
-
-            self.average_latency()
-
-            * 1000.0
-
-        )
+        return self.average_latency() * 1000.0
 
     def fps(
         self,
@@ -110,13 +92,7 @@ class LatencyMetric:
 
             return 0.0
 
-        return (
-
-            self.total_samples
-
-            / self.total_latency
-
-        )
+        return self.total_samples / self.total_latency
 
     def throughput(
         self,
@@ -135,19 +111,12 @@ class LatencyMetric:
         """
 
         return {
-
             "latency_ms": self.average_latency_ms(),
-
             "latency_seconds": self.average_latency(),
-
             "fps": self.fps(),
-
             "throughput": self.throughput(),
-
             "samples": self.total_samples,
-
             "batches": self.total_batches,
-
         }
 
     @property
@@ -157,7 +126,7 @@ class LatencyMetric:
         """
         Number of processed batches.
         """
-    
+
         return self.total_batches
 
     @property
@@ -167,7 +136,7 @@ class LatencyMetric:
         """
         Number of processed samples.
         """
-    
+
         return self.total_samples
 
     def average_sample_latency_ms(
@@ -176,15 +145,9 @@ class LatencyMetric:
         """
         Average latency per sample.
         """
-    
+
         if self.total_samples == 0:
-    
+
             return 0.0
-    
-        return (
-    
-            self.total_latency
-    
-            / self.total_samples
-    
-        ) * 1000.0
+
+        return (self.total_latency / self.total_samples) * 1000.0

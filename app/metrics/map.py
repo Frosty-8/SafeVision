@@ -7,28 +7,28 @@ from pycocotools.cocoeval import COCOeval
 
 from app.utils.logger import logger
 
+
 class MAPMetric:
     """
     Computes COCO Mean Average Precision.
     """
+
     def __init__(
         self,
         annotation_file: str | Path,
     ) -> None:
-    
+
         self.annotation_file = Path(
             annotation_file,
         )
-    
+
         self.coco_gt = COCO(
             str(self.annotation_file),
         )
-    
+
         self.results = None
-    
-        logger.info(
-            "MAPMetric initialized."
-        )
+
+        logger.info("MAPMetric initialized.")
 
     def evaluate(
         self,
@@ -37,30 +37,30 @@ class MAPMetric:
         """
         Evaluate predictions using COCO.
         """
-    
+
         coco_predictions = self.coco_gt.loadRes(
             str(prediction_file),
         )
-    
+
         evaluator = COCOeval(
             self.coco_gt,
             coco_predictions,
             "bbox",
         )
-    
+
         evaluator.evaluate()
-    
+
         evaluator.accumulate()
-    
+
         evaluator.summarize()
-    
+
         self.results = evaluator.stats
 
     @property
     def map(
         self,
     ) -> float:
-    
+
         return float(
             self.results[0],
         )
@@ -69,7 +69,7 @@ class MAPMetric:
     def map50(
         self,
     ) -> float:
-    
+
         return float(
             self.results[1],
         )
@@ -78,7 +78,7 @@ class MAPMetric:
     def map75(
         self,
     ) -> float:
-    
+
         return float(
             self.results[2],
         )
@@ -87,7 +87,7 @@ class MAPMetric:
     def aps(
         self,
     ) -> float:
-    
+
         return float(
             self.results[3],
         )
@@ -96,7 +96,7 @@ class MAPMetric:
     def apm(
         self,
     ) -> float:
-    
+
         return float(
             self.results[4],
         )
@@ -105,7 +105,7 @@ class MAPMetric:
     def apl(
         self,
     ) -> float:
-    
+
         return float(
             self.results[5],
         )
@@ -116,19 +116,12 @@ class MAPMetric:
         """
         Return COCO evaluation metrics.
         """
-    
+
         return {
-    
             "map": self.map,
-    
             "map50": self.map50,
-    
             "map75": self.map75,
-    
             "aps": self.aps,
-    
             "apm": self.apm,
-    
             "apl": self.apl,
-    
         }
