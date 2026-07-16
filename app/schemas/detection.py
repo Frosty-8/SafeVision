@@ -31,6 +31,8 @@ class DetectionOutput:
 
     queries: torch.Tensor | None = None
 
+    labels: torch.Tensor | None = None
+
 
 @dataclass(slots=True)
 class DetectionResult:
@@ -84,3 +86,30 @@ class MatchedBatch:
     labels: torch.Tensor
 
     target_boxes: torch.Tensor
+
+
+@dataclass(slots=True)
+class EvaluationReport:
+    """
+    Complete detector evaluation.
+    """
+
+    loss: float
+
+    map: float
+
+    precision: float
+
+    recall: float
+
+    f1_score: float
+
+    average_iou: float
+
+    fps: float
+
+    latency_ms: float
+
+    num_images: int
+
+    num_detections: int
